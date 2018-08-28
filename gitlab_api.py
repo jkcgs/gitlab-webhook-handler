@@ -1,4 +1,4 @@
-from urlparse import urlparse
+from urllib import parse as urlparse
 import requests
 import json
 class GitlabApi:

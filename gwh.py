@@ -16,7 +16,7 @@ app = Flask(__name__)
 
 REPOS_JSON_PATH = None
 WHITELIST_IP = None
-repos = None
+repos = {}
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
@@ -34,7 +34,7 @@ def index():
             else:
                 abort(403)
 
-        payload = json.loads(request.data)
+        payload = json.loads(request.data.decode('utf-8'))
 
         # common for events
         if payload['object_kind'] in ['push', 'issue']:
@@ -68,7 +68,7 @@ def index():
                                 subp = subprocess.Popen(action, cwd=branch.get("path", "."), shell=True)
                                 subp.wait()
                             except Exception as e:
-                                print e
+                                print(e)
             return 'OK'
 
         if payload['object_kind'] == "issue":
@@ -126,13 +126,13 @@ def index():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="gitlab webhook receiver")
-    parser.add_argument("-c", "--config", action="store", 
+    parser.add_argument("-c", "--config", action="store",
                         help="path to repos configuration", required=True)
-    parser.add_argument("-p", "--port", action="store", help="server port", 
+    parser.add_argument("-p", "--port", action="store", help="server port",
                         required=False, default=8080)
-    parser.add_argument("--allow", action="store", help="whitelist Gitlab IP block", 
+    parser.add_argument("--allow", action="store", help="whitelist Gitlab IP block",
                         required=False, default=None)
-    parser.add_argument("--debug", action="store_true", help="enable debug output", 
+    parser.add_argument("--debug", action="store_true", help="enable debug output",
                         required=False, default=False)
 
     args = parser.parse_args()
@@ -141,8 +141,9 @@ if __name__ == "__main__":
     REPOS_JSON_PATH = args.config
     try:
         repos = json.loads(io.open(REPOS_JSON_PATH, 'r').read())
+        print(repos)
     except:
-        print "Error opening repos file %s -- check file exists and is valid json" % REPOS_JSON_PATH
+        print("Error opening repos file {} -- check file exists and is valid json".format(REPOS_JSON_PATH))
         raise
 
     if args.allow:
@@ -152,3 +153,5 @@ if __name__ == "__main__":
         app.debug = True
 
     app.run(host="0.0.0.0", port=port_number)
+else:
+    repos = json.loads(io.open('repos.json', 'r').read())
